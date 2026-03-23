@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Velvet Scratch – Bedroom Positions Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --burgundy: #6B1A2A;
+  --deep-burgundy: #3D0A14;
+  --black: #0A0508;
+  --gold: #C9A84C;
+  --gold-light: #E8C97A;
+  --rose: #C2607A;
+  --rose-light: #E8A0B0;
+  --cream: #F5EDE0;
+  --glass-bg: rgba(255,255,255,0.04);
+  --glass-border: rgba(201,168,76,0.2);
+  --glow: rgba(194,96,122,0.3);
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--black);
+  color: var(--cream);
+  font-family: 'Inter', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+body {
+  background:
+    radial-gradient(ellipse at 20% 20%, #4a0e1e 0%, #1a0510 40%, #0A0508 70%),
+    radial-gradient(ellipse at 80% 80%, #2d0a1a 0%, #0A0508 50%);
+  background-blend-mode: screen;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+/* ── HEADER ── */
+#header {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 10px 16px 9px;
+  background: linear-gradient(180deg, rgba(61,10,20,0.98) 0%, rgba(20,5,12,0.88) 100%);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: 0 4px 28px rgba(107,26,42,0.45);
+  z-index: 10;
+  position: relative;
+}
+#header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), var(--rose), var(--gold), transparent);
+}
+#header h1 {
+  font-family: 'Great Vibes', cursive;
+  font-size: clamp(2.4rem, 9vw, 4rem);
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 35%, var(--rose-light) 65%, var(--gold-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.05;
+  filter: drop-shadow(0 0 22px rgba(201,168,76,0.65));
+}
+#header .subtitle {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(0.58rem, 2.2vw, 0.8rem);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--rose-light);
+  opacity: 0.85;
+  margin-top: 2px;
+}
+#header .header-divider {
+  width: 70px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 7px auto 6px;
+  opacity: 0.55;
+}
+#header .stats {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.stat-pill {
+  background: rgba(107,26,42,0.3);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 20px;
+  padding: 3px 13px;
+  font-size: clamp(0.62rem, 1.9vw, 0.76rem);
+  font-weight: 500;
+  color: var(--gold-light);
+  backdrop-filter: blur(10px);
+  letter-spacing: 0.04em;
+}
+.stat-pill span { color: var(--rose-light); font-weight: 700; }
+
+/* ── PAGE DOTS ── */
+#page-indicators {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0 4px;
+}
+.dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: rgba(201,168,76,0.3);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.dot.active {
+  background: var(--gold);
+  width: 16px;
+  border-radius: 3px;
+  box-shadow: 0 0 6px var(--gold);
+}
+
+/* ── CAROUSEL WRAPPER ── */
+#carousel-wrapper {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  /* Prevent any default scroll behaviour bleeding through */
+  touch-action: pan-y;
+}
+
+#carousel {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.42s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+  /* horizontal paging; vertical scroll stays on .page */
+  touch-action: pan-y;
+}
+
+/* ── PAGE ── */
+.page {
+  flex-shrink: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 8px 10px 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── GRID ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  flex: 1;
+  min-height: 0;
+  /* 4 equal rows */
+  grid-template-rows: repeat(4, 1fr);
+  align-items: center;
+  justify-items: center;
+}
+
+/* ── BLOB ITEM ── */
+.blob-item {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The actual blob is always a square based on the shorter side */
+.blob-inner {
+  position: relative;
+  /* Take the smaller of width or height to stay square */
+  width: min(100%, calc(var(--cell-h, 100%) * 0.92));
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  transition: box-shadow 0.4s ease;
+  flex-shrink: 0;
+}
+
+/* 8 organic blob presets */
+.blob-0 { border-radius: 62% 38% 46% 54% / 60% 44% 56% 40%; }
+.blob-1 { border-radius: 71% 29% 55% 45% / 46% 63% 37% 54%; }
+.blob-2 { border-radius: 42% 58% 68% 32% / 55% 37% 63% 45%; }
+.blob-3 { border-radius: 55% 45% 38% 62% / 62% 44% 56% 38%; }
+.blob-4 { border-radius: 38% 62% 52% 48% / 48% 55% 45% 52%; }
+.blob-5 { border-radius: 66% 34% 44% 56% / 52% 66% 34% 48%; }
+.blob-6 { border-radius: 48% 52% 62% 38% / 57% 43% 57% 43%; }
+.blob-7 { border-radius: 35% 65% 55% 45% / 65% 40% 60% 35%; }
+
+/* ── IMAGE LAYER (base) ── */
+.blob-image-wrap {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #2d0a1a 0%, #1a0510 60%, #3D0A14 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+/* 
+  Replace the placeholder div with your actual image:
+  <img src="your-position-XX.jpg" alt="Position Name"
+       style="width:100%;height:100%;object-fit:cover;display:block;">
+*/
+.blob-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(107,26,42,0.6) 0%, rgba(201,168,76,0.08) 50%, rgba(61,10,20,0.8) 100%);
+}
+.blob-image-placeholder span {
+  font-size: clamp(0.32rem, 1vw, 0.45rem);
+  color: rgba(201,168,76,0.25);
+  font-style: italic;
+  text-align: center;
+  padding: 4px;
+  pointer-events: none;
+}
+
+/* ── SCRATCH CANVAS ── */
+.scratch-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  /* Scratch canvases block ALL touch; JS decides whether to scratch or swipe */
+  touch-action: none;
+  transition: opacity 0.5s ease;
+}
+
+.blob-inner.revealed {
+  box-shadow: 0 0 18px var(--glow), 0 0 36px rgba(201,168,76,0.12);
+}
+
+/* ── MODAL CARD ── */
+#modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,2,8,0.88);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.3s ease;
+}
+#modal-overlay.open { display: flex; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cardIn { from { opacity: 0; transform: scale(0.85) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+.modal-card {
+  background: linear-gradient(145deg, #1e0810 0%, #2d0a1a 40%, #1a0510 100%);
+  border: 1px solid rgba(201,168,76,0.35);
+  border-radius: 24px;
+  width: min(340px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 0 20px;
+  box-shadow: 0 0 60px rgba(107,26,42,0.6), 0 0 120px rgba(201,168,76,0.1), inset 0 1px 0 rgba(201,168,76,0.2);
+  animation: cardIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  scrollbar-width: none;
+}
+.modal-card::-webkit-scrollbar { display: none; }
+
+/* Card image */
+.card-image-wrap {
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: linear-gradient(135deg, #2d0a1a 0%, #1a0510 100%);
+  border-radius: 24px 24px 0 0;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+.card-image-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, rgba(107,26,42,0.5) 0%, rgba(201,168,76,0.06) 50%, rgba(61,10,20,0.7) 100%);
+}
+/*
+  Replace the placeholder with your image inside .card-image-wrap:
+  <img src="your-position-XX.jpg" alt="Position Name"
+       style="width:100%;height:100%;object-fit:cover;display:block;">
+*/
+.card-image-placeholder span {
+  font-size: 0.62rem;
+  color: rgba(201,168,76,0.3);
+  font-style: italic;
+  text-align: center;
+  padding: 16px;
+}
+
+/* Gradient overlay on image */
+.card-image-wrap::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(to top, #1e0810, transparent);
+  pointer-events: none;
+}
+
+.card-body { padding: 0 20px; }
+
+.card-pos-name {
+  font-family: 'Great Vibes', cursive;
+  font-size: clamp(2rem, 8vw, 2.8rem);
+  background: linear-gradient(135deg, var(--gold-light), var(--rose-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+  line-height: 1.1;
+  margin: 12px 0 4px;
+  filter: drop-shadow(0 0 10px rgba(232,201,122,0.35));
+}
+
+.card-difficulty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.card-diff-badge {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid;
+}
+.diff-beginner   { color: #C2A84C; border-color: rgba(194,168,76,0.4); background: rgba(194,168,76,0.08); }
+.diff-intimate   { color: #C2607A; border-color: rgba(194,96,122,0.4); background: rgba(194,96,122,0.08); }
+.diff-advanced   { color: #E87090; border-color: rgba(232,112,144,0.4); background: rgba(232,112,144,0.08); }
+
+.card-hearts {
+  font-size: 0.75rem;
+}
+
+.card-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
+  margin: 10px 0;
+}
+
+.card-desc {
+  font-size: clamp(0.72rem, 2vw, 0.82rem);
+  line-height: 1.65;
+  color: rgba(245,237,224,0.72);
+  text-align: center;
+  font-style: italic;
+  font-weight: 300;
+  margin-bottom: 14px;
+}
+
+.card-pts-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  color: var(--gold);
+  margin-bottom: 14px;
+  letter-spacing: 0.06em;
+}
+
+.card-complete-btn {
+  width: 100%;
+  padding: 11px;
+  background: linear-gradient(135deg, var(--burgundy), var(--rose));
+  border: 1px solid rgba(201,168,76,0.4);
+  color: var(--cream);
+  font-family: 'Playfair Display', serif;
+  font-size: 0.8rem;
+  border-radius: 14px;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(107,26,42,0.5);
+  margin-bottom: 8px;
+}
+.card-complete-btn:hover {
+  background: linear-gradient(135deg, var(--rose), var(--gold));
+  box-shadow: 0 6px 24px rgba(194,96,122,0.6);
+  transform: translateY(-1px);
+}
+.card-complete-btn:disabled {
+  background: linear-gradient(135deg, rgba(201,168,76,0.2), rgba(201,168,76,0.15));
+  color: var(--gold-light);
+  cursor: default;
+  transform: none;
+  box-shadow: none;
+}
+
+.card-close-btn {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid rgba(201,168,76,0.15);
+  color: rgba(201,168,76,0.5);
+  font-size: 0.7rem;
+  border-radius: 10px;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+.card-close-btn:hover {
+  border-color: rgba(201,168,76,0.4);
+  color: var(--gold-light);
+}
+
+/* ── FOOTER ── */
+#footer {
+  flex-shrink: 0;
+  text-align: center;
+  padding: 4px 16px 5px;
+  font-size: clamp(0.44rem, 1.3vw, 0.54rem);
+  color: rgba(201,168,76,0.38);
+  letter-spacing: 0.1em;
+  border-top: 1px solid rgba(201,168,76,0.08);
+  font-style: italic;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <h1>Velvet Scratch</h1>
+  <div class="subtitle">Bedroom Positions · A Couples Game</div>
+  <div class="header-divider"></div>
+  <div class="stats">
+    <div class="stat-pill">✦ Points: <span id="pts">0</span></div>
+    <div class="stat-pill">♡ Done: <span id="done">0</span> / 36</div>
+  </div>
+</div>
+
+<!-- PAGE DOTS -->
+<div id="page-indicators">
+  <div class="dot active" onclick="goToPage(0)"></div>
+  <div class="dot" onclick="goToPage(1)"></div>
+  <div class="dot" onclick="goToPage(2)"></div>
+</div>
+
+<!-- CAROUSEL -->
+<div id="carousel-wrapper">
+  <div id="carousel"></div>
+</div>
+
+<!-- MODAL CARD -->
+<div id="modal-overlay">
+  <div class="modal-card" id="modal-card">
+    <div class="card-image-wrap" id="card-img-wrap">
+      <div class="card-image-placeholder">
+        <!--
+          Replace this div with your image:
+          <img src="your-position-XX.jpg" alt="Position Name"
+               style="width:100%;height:100%;object-fit:cover;display:block;">
+        -->
+        <span>[ Add Position Image Here ]</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="card-pos-name" id="card-name"></div>
+      <div class="card-difficulty">
+        <span class="card-diff-badge" id="card-diff-badge"></span>
+        <span class="card-hearts" id="card-hearts"></span>
+      </div>
+      <div class="card-divider"></div>
+      <div class="card-desc" id="card-desc"></div>
+      <div class="card-pts-badge" id="card-pts-badge"></div>
+      <button class="card-complete-btn" id="card-complete-btn">Mark Complete</button>
+      <button class="card-close-btn" onclick="closeModal()">✕ &nbsp;Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div id="footer">For Couples &nbsp;•&nbsp; 18+ &nbsp;•&nbsp; Inspired by Ritik</div>
+
+<script>
+// ══════════════════════════════════════════
+//  IMAGE MAP  —  imgbb Hosted URLs
+//  Paste your imgbb direct-image URLs below.
+//  Use the "Direct Link" from imgbb (ends in .jpg/.png).
+//  Example:  0: 'https://i.ibb.co/XXXXXXX/pos-01.jpg',
+// ══════════════════════════════════════════
+const imageMap = {
+  0:  'https://i.ibb.co/DgM3wTvP/pos-01.jpg',   // The Lotus
+  1:  'https://i.ibb.co/39YfWTJz/pos-02.jpg',   // Silk Cascade
+  2:  'https://i.ibb.co/xkyTHt6/pos-03.png',   // Crimson Arch
+  3:  'https://i.ibb.co/5gLj9Ljz/pos-04.jpg',   // Midnight Spoon
+  4:  'https://i.ibb.co/MD95Rqbt/pos-05.jpg',   // Velvet Throne
+  5:  'https://i.ibb.co/zTH1sT4h/pos-06.jpg',   // The Serpent
+  6:  'https://i.ibb.co/G4WgPfQB/pos-07.jpg',   // Rose Bloom
+  7:  'https://i.ibb.co/PZb0Rgb9/pos-08.jpg',   // Golden Bridge
+  8:  'https://i.ibb.co/rGfms4zb/pos-09.jpg',   // Whisper Close
+  9:  'https://i.ibb.co/v6wZcn09/pos-10.jpg',   // The Tide
+  10: 'https://i.ibb.co/Z6hhDM7b/pos-11.png',   // Pearl Diver
+  11: 'https://i.ibb.co/fYsmbsBC/pos-12.jpg',   // Scarlet Twist
+  12: 'https://i.ibb.co/r25XMCWf/pos-13.jpg',   // The Anchor
+  13: 'https://i.ibb.co/qYKjP8P6/pos-14.png',   // Dusk Reverie
+  14: 'https://i.ibb.co/d4tD4jrq/pos-15.png',   // Ivory Throne
+  15: 'https://i.ibb.co/xKpqSPw3/pos-16.jpg',   // The Whirlpool
+  16: 'https://i.ibb.co/46bH9Jg/pos-17.jpg',   // Burning Bow
+  17: 'https://i.ibb.co/8gJWGW8F/pos-18.jpg',   // Velvet Lock
+  18: 'https://i.ibb.co/YFpjP83W/pos-19.jpg',   // The Orchid
+  19: 'https://i.ibb.co/wZrvMWcV/pos-20.jpg',   // Shadow Dance
+  20: 'https://i.ibb.co/JLnb8Vm/pos-21.jpg',   // Warm Hearth
+  21: 'https://i.ibb.co/XxKrdYdg/pos-22.jpg',   // The Cascade
+  22: 'https://i.ibb.co/KpYZ188h/pos-23.jpg',   // Moonrise
+  23: 'https://i.ibb.co/bgJXWQWf/pos-24.png',   // Deep Velvet
+  24: 'https://i.ibb.co/cSRYb2pg/pos-25.web',   // The Siren
+  25: 'https://i.ibb.co/Y7XVxjmk/pos-26.jpg',   // Liquid Gold
+  26: 'https://i.ibb.co/k24Tky9R/pos-27.png',   // The Dragonfly
+  27: 'https://i.ibb.co/ymh7Ns2r/pos-28.jpg',   // Amber Hold
+  28: 'https://i.ibb.co/FkNkfLRH/pos-29.jpg',   // Crimson Lotus
+  29: 'https://i.ibb.co/QvtwjtT8/pos-30.jpg',   // The Undertow
+  30: 'https://i.ibb.co/C3YmFsg0/pos-31.jpg',   // Silk Wings
+  31: 'https://i.ibb.co/4RWySH9T/pos-32.jpg',   // Ember Glow
+  32: 'https://i.ibb.co/4Z8DVNj1/pos-33.jpg',   // The Chalice
+  33: 'https://i.ibb.co/Z1KmCShq/pos-34.jpg',   // Obsidian Night
+  34: 'https://i.ibb.co/4nyPJ9q7/pos-35.jpg',   // The Bloom
+  35: 'https://i.ibb.co/p6htRqD6/pos-36.jpg',   // Infinite Loop
+};
+
+// ══════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════
+const positions = [
+  // Page 1
+  { name:"The Lotus",      desc:"A tender face-to-face embrace where souls align as perfectly as bodies — slow, deep, and profoundly intimate.", diff:1, pts:50  },
+  { name:"Silk Cascade",   desc:"She drapes across him like liquid silk, finding waves of pleasure in each gentle roll of the hips.", diff:1, pts:50  },
+  { name:"Crimson Arch",   desc:"A graceful backward bow that opens her entirely, letting desire pool in places rarely touched.", diff:3, pts:250 },
+  { name:"Midnight Spoon", desc:"Curved like crescent moons, bodies nested in perfect warmth — closeness becomes electric.", diff:1, pts:50  },
+  { name:"Velvet Throne",  desc:"He sits, she reigns — controlling every rhythm and depth, a queen presiding over her kingdom.", diff:2, pts:150 },
+  { name:"The Serpent",    desc:"Sinuous and slow, bodies intertwine like serpents — every movement sends ripples of sensation.", diff:2, pts:150 },
+  { name:"Rose Bloom",     desc:"Petals unfurl slowly as she opens to him fully, vulnerability blooming into exquisite pleasure.", diff:1, pts:50  },
+  { name:"Golden Bridge",  desc:"She arches into a glorious bridge above him, her silhouette breathtaking, the angle divine.", diff:3, pts:250 },
+  { name:"Whisper Close",  desc:"Foreheads touching, breath mingling — no space exists between longing and fulfilment.", diff:1, pts:50  },
+  { name:"The Tide",       desc:"Rhythmic as ocean waves, he moves behind her — each surge deeper and more consuming.", diff:2, pts:150 },
+  { name:"Pearl Diver",    desc:"He descends, exploring hidden treasures with reverent focus, taking all the time in the world.", diff:2, pts:150 },
+  { name:"Scarlet Twist",  desc:"Bodies entwined in a sensual spiral, hips angled to unlock entirely new depths of sensation.", diff:3, pts:250 },
+  // Page 2
+  { name:"The Anchor",     desc:"She wraps her legs around him like an anchor holds a ship — grounding, possessive, consuming.", diff:2, pts:150 },
+  { name:"Dusk Reverie",   desc:"Side by side in the fading light, slow and dreamlike, as if time itself has agreed to linger.", diff:1, pts:50  },
+  { name:"Ivory Throne",   desc:"He kneels before her in reverent worship, his devotion expressed in the most intimate language.", diff:2, pts:150 },
+  { name:"The Whirlpool",  desc:"Circular, hypnotic motion that spirals both into a delicious vortex of mounting pleasure.", diff:2, pts:150 },
+  { name:"Burning Bow",    desc:"She bends forward, a perfect crescent, hands reaching for the floor as fire rushes through her.", diff:3, pts:250 },
+  { name:"Velvet Lock",    desc:"Legs crossed and hips tilted, she locks him in tight — depth and friction magnified beyond words.", diff:2, pts:150 },
+  { name:"The Orchid",     desc:"Rare and exquisite — her leg raised like an orchid's petal, revealing angles of impossible beauty.", diff:3, pts:250 },
+  { name:"Shadow Dance",   desc:"Their silhouettes blend in rhythmic darkness, every move choreographed by instinct and desire.", diff:2, pts:150 },
+  { name:"Warm Hearth",    desc:"She leans back into him like settling into firelight — safe, warm, and deeply, lovingly ravished.", diff:1, pts:50  },
+  { name:"The Cascade",    desc:"She lies at the edge, he stands before her — a waterfall of sensation from a perfect vantage.", diff:2, pts:150 },
+  { name:"Moonrise",       desc:"She rises above him slowly like the moon cresting the horizon — luminous, unhurried, magnificent.", diff:2, pts:150 },
+  { name:"Deep Velvet",    desc:"The deepest possible closeness — bodies fully pressed, every heartbeat shared and felt.", diff:3, pts:250 },
+  // Page 3
+  { name:"The Siren",      desc:"She calls to him from above, irresistible — and he is gloriously, willingly lost.", diff:2, pts:150 },
+  { name:"Liquid Gold",    desc:"Slow, molten, and utterly unhurried — pleasure poured like honey between two hungry souls.", diff:1, pts:50  },
+  { name:"The Dragonfly",  desc:"Light as wings yet intensely present — she hovers above, barely touching yet igniting everything.", diff:3, pts:250 },
+  { name:"Amber Hold",     desc:"Time freezes like amber — both suspended in the exquisite moment just before the beautiful end.", diff:2, pts:150 },
+  { name:"Crimson Lotus",  desc:"The sacred and the carnal married in one elegant, deeply connected position of pure intimacy.", diff:2, pts:150 },
+  { name:"The Undertow",   desc:"Pulled into each other like currents — resistance is impossible, surrender is everything.", diff:2, pts:150 },
+  { name:"Silk Wings",     desc:"Her arms spread wide, spine curved, she becomes something winged and wholly free beneath him.", diff:3, pts:250 },
+  { name:"Ember Glow",     desc:"The quiet, glowing warmth that remains after the wildfire — languid, gentle, deeply satisfied.", diff:1, pts:50  },
+  { name:"The Chalice",    desc:"She cups him like precious wine — not a drop wasted, every sensation savoured to the last.", diff:2, pts:150 },
+  { name:"Obsidian Night", desc:"In the deep dark, instinct takes over entirely — sensation amplified, sight surrendered to touch.", diff:3, pts:250 },
+  { name:"The Bloom",      desc:"She opens slowly, layer by layer, petals unfurling to reveal the most tender heart within.", diff:1, pts:50  },
+  { name:"Infinite Loop",  desc:"Positions blur into one another in a continuous loop of pleasure — the game never truly ends.", diff:3, pts:250 },
+];
+
+const diffLabels  = ['','Beginner','Intimate','Advanced'];
+const diffClasses = ['','diff-beginner','diff-intimate','diff-advanced'];
+const hearts      = ['','♡','♡ ♡','♡ ♡ ♡'];
+const blobClasses = ['blob-0','blob-1','blob-2','blob-3','blob-4','blob-5','blob-6','blob-7'];
+
+// ══════════════════════════════════════════
+//  STATE  —  always reset on page load/refresh
+// ══════════════════════════════════════════
+localStorage.removeItem('vs_points');
+localStorage.removeItem('vs_done');
+localStorage.removeItem('vs_items');
+
+let currentPage    = 0;
+const TOTAL_PAGES  = 3;
+const ITEMS_PAGE   = 12;
+let points     = 0;
+let completed  = 0;
+let savedItems = {};
+let modalIdx   = -1;
+
+// ══════════════════════════════════════════
+//  BUILD PAGES
+// ══════════════════════════════════════════
+function buildPages() {
+  const carousel = document.getElementById('carousel');
+  for (let p = 0; p < TOTAL_PAGES; p++) {
+    const page = document.createElement('div');
+    page.className = 'page';
+    page.id = `page-${p}`;
+
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+
+    for (let i = 0; i < ITEMS_PAGE; i++) {
+      const idx       = p * ITEMS_PAGE + i;
+      const pos       = positions[idx];
+      const blobClass = blobClasses[idx % blobClasses.length];
+      const isComplete= savedItems[idx] === 'done';
+      const isRevealed= isComplete || savedItems[idx] === 'revealed';
+
+      const item  = document.createElement('div');
+      item.className = 'blob-item';
+
+      const inner = document.createElement('div');
+      inner.className  = `blob-inner ${blobClass}${isRevealed ? ' revealed' : ''}`;
+      inner.dataset.idx = idx;
+
+      // ── Image layer (sits behind scratch canvas) ──
+      const imgWrap = document.createElement('div');
+      imgWrap.className = 'blob-image-wrap';
+
+      const imgSrc = imageMap[idx];
+      if (imgSrc) {
+        // Hosted image — lazy load so off-screen images don't block page
+        const img = document.createElement('img');
+        img.alt     = pos.name;
+        img.loading = 'lazy';          // browser lazy-loads off-screen
+        img.decoding = 'async';        // non-blocking decode
+        img.crossOrigin = 'anonymous'; // needed for imgbb / CDN hosts
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;transition:opacity 0.3s ease;opacity:0;';
+        // Fade in once loaded
+        img.onload  = () => { img.style.opacity = '1'; };
+        img.onerror = () => {
+          // If image fails, show numbered fallback
+          imgWrap.innerHTML = `<div class="blob-image-placeholder"><span>${idx + 1}</span></div>`;
+        };
+        img.src = imgSrc; // set src AFTER onload/onerror are attached
+        imgWrap.appendChild(img);
+      } else {
+        // No URL set yet — gradient placeholder
+        const imgPh = document.createElement('div');
+        imgPh.className = 'blob-image-placeholder';
+        const phSpan = document.createElement('span');
+        phSpan.textContent = `${idx + 1}`;
+        imgPh.appendChild(phSpan);
+        imgWrap.appendChild(imgPh);
+      }
+
+      // Scratch canvas
+      const canvas = document.createElement('canvas');
+      canvas.className = 'scratch-canvas';
+      canvas.dataset.idx = idx;
+      if (isRevealed) {
+        canvas.style.opacity = '0';
+        canvas.style.pointerEvents = 'none';
+      }
+
+      inner.appendChild(imgWrap);
+      inner.appendChild(canvas);
+
+      // ── Tap on a revealed shape → re-open card ──
+      inner.addEventListener('click', e => {
+        // Only fire if scratch is gone (canvas transparent / removed)
+        if (canvas.style.opacity === '0' || canvas.style.pointerEvents === 'none') {
+          openModal(idx);
+        }
+      });
+      // Touch tap (no drag) on revealed shape
+      let tapStartX = 0, tapStartY = 0;
+      inner.addEventListener('touchstart', e => {
+        tapStartX = e.touches[0].clientX;
+        tapStartY = e.touches[0].clientY;
+      }, { passive: true });
+      inner.addEventListener('touchend', e => {
+        if (canvas.style.opacity !== '0') return; // not revealed yet
+        const dx = Math.abs(e.changedTouches[0].clientX - tapStartX);
+        const dy = Math.abs(e.changedTouches[0].clientY - tapStartY);
+        if (dx < 10 && dy < 10) openModal(idx); // was a tap, not a swipe
+      }, { passive: true });
+
+      item.appendChild(inner);
+      grid.appendChild(item);
+    }
+
+    page.appendChild(grid);
+    carousel.appendChild(page);
+  }
+}
+
+// ══════════════════════════════════════════
+//  SCRATCH ENGINE  (touch/mouse disambiguated)
+// ══════════════════════════════════════════
+function initAllScratch() {
+  document.querySelectorAll('.scratch-canvas').forEach(canvas => {
+    if (canvas.style.opacity === '0') return;
+    sizeCanvas(canvas);
+    new ResizeObserver(() => sizeCanvas(canvas)).observe(canvas.parentElement);
+    attachScratchEvents(canvas);
+  });
+}
+
+function sizeCanvas(canvas) {
+  const r = canvas.parentElement.getBoundingClientRect();
+  if (r.width < 4) return;
+  canvas.width  = r.width;
+  canvas.height = r.height;
+  drawScratchLayer(canvas);
+}
+
+function drawScratchLayer(canvas) {
+  const ctx = canvas.getContext('2d');
+  ctx.globalCompositeOperation = 'source-over';
+  // Metallic gradient
+  const g = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  g.addColorStop(0,   '#7a6a7e');
+  g.addColorStop(0.25,'#b0a0b8');
+  g.addColorStop(0.5, '#c9b090');
+  g.addColorStop(0.75,'#a89688');
+  g.addColorStop(1,   '#7a6a7e');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Subtle shimmer lines
+  ctx.globalCompositeOperation = 'source-over';
+  for (let y = 0; y < canvas.height; y += 4) {
+    ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.03})`;
+    ctx.fillRect(0, y, canvas.width, 1);
+  }
+  // NO hint text — clean silver surface
+}
+
+function attachScratchEvents(canvas) {
+  // State for this canvas
+  let active      = false; // currently scratching
+  let startX      = 0;
+  let startY      = 0;
+  let hasMoved    = false;  // did finger move enough to be a scratch?
+  let isHorizontal = null;  // null = undecided, true = swipe, false = scratch
+  let prevX = 0, prevY = 0;
+  const DECISION_PX = 8; // pixels before we decide axis
+
+  // ── TOUCH ──
+  canvas.addEventListener('touchstart', e => {
+    if (canvas.style.opacity === '0') return;
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+    prevX  = startX;
+    prevY  = startY;
+    active = true;
+    hasMoved = false;
+    isHorizontal = null;
+  }, { passive: true });
+
+  canvas.addEventListener('touchmove', e => {
+    if (!active || canvas.style.opacity === '0') return;
+    const t  = e.touches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+
+    // Decide axis once
+    if (isHorizontal === null && dist > DECISION_PX) {
+      isHorizontal = Math.abs(dx) > Math.abs(dy);
+    }
+
+    // If still undecided or decided as horizontal swipe → let carousel handle it
+    if (isHorizontal === null || isHorizontal) {
+      active = false;
+      return;
+    }
+
+    // Vertical or diagonal with scratch intent → block page scroll, scratch
+    e.preventDefault();
+    const r  = canvas.getBoundingClientRect();
+    const cx = t.clientX - r.left;
+    const cy = t.clientY - r.top;
+    scratchLine(canvas, prevX - r.left, prevY - r.top, cx, cy);
+    prevX = t.clientX;
+    prevY = t.clientY;
+    hasMoved = true;
+    checkReveal(canvas);
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', () => { active = false; });
+
+  // ── MOUSE ──
+  let mouseDown = false;
+  let mPrevX = 0, mPrevY = 0;
+
+  canvas.addEventListener('mousedown', e => {
+    if (canvas.style.opacity === '0') return;
+    mouseDown = true;
+    const r = canvas.getBoundingClientRect();
+    mPrevX = e.clientX - r.left;
+    mPrevY = e.clientY - r.top;
+    scratchDot(canvas, mPrevX, mPrevY);
+    checkReveal(canvas);
+  });
+  canvas.addEventListener('mousemove', e => {
+    if (!mouseDown || canvas.style.opacity === '0') return;
+    const r  = canvas.getBoundingClientRect();
+    const cx = e.clientX - r.left;
+    const cy = e.clientY - r.top;
+    scratchLine(canvas, mPrevX, mPrevY, cx, cy);
+    mPrevX = cx; mPrevY = cy;
+    checkReveal(canvas);
+  });
+  canvas.addEventListener('mouseup',    () => { mouseDown = false; });
+  canvas.addEventListener('mouseleave', () => { mouseDown = false; });
+}
+
+function scratchRadius(canvas) {
+  return Math.max(canvas.width * 0.13, 14);
+}
+
+function scratchDot(canvas, x, y) {
+  const ctx = canvas.getContext('2d');
+  const r   = scratchRadius(canvas);
+  ctx.globalCompositeOperation = 'destination-out';
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0,   'rgba(0,0,0,1)');
+  g.addColorStop(0.6, 'rgba(0,0,0,0.9)');
+  g.addColorStop(1,   'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function scratchLine(canvas, x1, y1, x2, y2) {
+  const dist  = Math.hypot(x2 - x1, y2 - y1);
+  const steps = Math.max(1, Math.floor(dist / 3));
+  for (let s = 0; s <= steps; s++) {
+    const t = s / steps;
+    scratchDot(canvas, x1 + (x2 - x1) * t, y1 + (y2 - y1) * t);
+  }
+}
+
+function checkReveal(canvas) {
+  const ctx = canvas.getContext('2d');
+  const d   = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  let transparent = 0;
+  for (let i = 3; i < d.length; i += 4) if (d[i] < 128) transparent++;
+  const pct = transparent / (d.length / 4);
+  if (pct > 0.62) revealAndOpenCard(canvas);
+}
+
+function revealAndOpenCard(canvas) {
+  if (canvas.style.opacity === '0') return; // already revealed
+  const idx = parseInt(canvas.dataset.idx);
+
+  // Fade out scratch layer
+  canvas.style.opacity = '0';
+  canvas.style.pointerEvents = 'none';
+  canvas.parentElement.classList.add('revealed');
+
+  // Mark as revealed in storage
+  if (!savedItems[idx]) {
+    savedItems[idx] = 'revealed';
+    localStorage.setItem('vs_items', JSON.stringify(savedItems));
+  }
+
+  // Confetti
+  const rect = canvas.getBoundingClientRect();
+  confetti({
+    particleCount: 28,
+    spread: 45,
+    origin: { x: (rect.left + rect.right) / 2 / window.innerWidth, y: (rect.top + rect.bottom) / 2 / window.innerHeight },
+    colors: ['#C9A84C','#C2607A','#E8C97A','#8B1A3A','#F5EDE0'],
+    scalar: 0.65,
+    startVelocity: 16,
+    ticks: 70,
+    gravity: 1.3,
+  });
+
+  // Open card after short delay
+  setTimeout(() => openModal(idx), 420);
+}
+
+// ══════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════
+function openModal(idx) {
+  const pos = positions[idx];
+  modalIdx  = idx;
+
+  document.getElementById('card-name').textContent = pos.name;
+  document.getElementById('card-desc').textContent = pos.desc;
+
+  const badge = document.getElementById('card-diff-badge');
+  badge.textContent = diffLabels[pos.diff];
+  badge.className   = `card-diff-badge ${diffClasses[pos.diff]}`;
+
+  document.getElementById('card-hearts').textContent    = hearts[pos.diff];
+  document.getElementById('card-pts-badge').textContent = `✦ Worth ${pos.pts} points on completion`;
+
+  // ── Populate card image ──
+  const cardImgWrap = document.getElementById('card-img-wrap');
+  cardImgWrap.innerHTML = ''; // clear previous
+  const imgSrc = imageMap[idx];
+  if (imgSrc) {
+    const img = document.createElement('img');
+    img.alt      = pos.name;
+    img.decoding = 'async';
+    img.crossOrigin = 'anonymous';
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;border-radius:24px 24px 0 0;transition:opacity 0.4s ease;opacity:0;';
+    img.onload  = () => { img.style.opacity = '1'; };
+    img.onerror = () => {
+      cardImgWrap.innerHTML = `<div class="card-image-placeholder"><span style="font-size:0.7rem;color:rgba(201,168,76,0.35);font-style:italic;text-align:center;padding:20px;display:block;">Image unavailable</span></div>`;
+    };
+    img.src = imgSrc;
+    cardImgWrap.appendChild(img);
+  } else {
+    const ph = document.createElement('div');
+    ph.className = 'card-image-placeholder';
+    ph.innerHTML = `<span style="font-size:0.62rem;color:rgba(201,168,76,0.3);font-style:italic;text-align:center;padding:16px;display:block;">[ Paste imgbb URL for pos-${String(idx+1).padStart(2,'0')} in imageMap ]</span>`;
+    cardImgWrap.appendChild(ph);
+  }
+
+  const btn = document.getElementById('card-complete-btn');
+  if (savedItems[idx] === 'done') {
+    btn.textContent = '✦ Already Completed';
+    btn.disabled = true;
+  } else {
+    btn.textContent = `Mark Complete · +${pos.pts} pts`;
+    btn.disabled = false;
+  }
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  modalIdx = -1;
+}
+
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+document.getElementById('card-complete-btn').addEventListener('click', () => {
+  if (modalIdx < 0) return;
+  const pos = positions[modalIdx];
+  savedItems[modalIdx] = 'done';
+  points    += pos.pts;
+  completed += 1;
+  localStorage.setItem('vs_points', points);
+  localStorage.setItem('vs_done',   completed);
+  localStorage.setItem('vs_items',  JSON.stringify(savedItems));
+  updateStats();
+
+  const btn = document.getElementById('card-complete-btn');
+  btn.textContent = '✦ Completed!';
+  btn.disabled    = true;
+
+  confetti({ particleCount: 100, spread: 90, origin: { x: 0.5, y: 0.55 }, colors: ['#C9A84C','#C2607A','#E8C97A','#8B1A3A','#F5EDE0'] });
+});
+
+function updateStats() {
+  document.getElementById('pts').textContent  = points.toLocaleString();
+  document.getElementById('done').textContent = completed;
+}
+
+// ══════════════════════════════════════════
+//  CAROUSEL  — clean axis-lock swipe
+// ══════════════════════════════════════════
+let carouselLocked  = false; // mid-animation
+let swipeStartX     = 0;
+let swipeStartY     = 0;
+let swipeActive     = false;
+let swipeAxis       = null;  // 'h' | 'v' | null
+let swipeDelta      = 0;
+const SWIPE_THRESH  = 50;
+const AXIS_DECIDE   = 10;
+
+function goToPage(p) {
+  p = Math.max(0, Math.min(TOTAL_PAGES - 1, p));
+  currentPage = p;
+  document.getElementById('carousel').style.transform = `translateX(-${p * 100}%)`;
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === p));
+  carouselLocked = true;
+  setTimeout(() => carouselLocked = false, 450);
+}
+
+function initCarousel() {
+  const wrapper  = document.getElementById('carousel-wrapper');
+  const carousel = document.getElementById('carousel');
+
+  // ── TOUCH on wrapper (not on canvases — they intercept scratching) ──
+  wrapper.addEventListener('touchstart', e => {
+    swipeStartX  = e.touches[0].clientX;
+    swipeStartY  = e.touches[0].clientY;
+    swipeActive  = true;
+    swipeAxis    = null;
+    swipeDelta   = 0;
+    carousel.style.transition = 'none';
+  }, { passive: true });
+
+  wrapper.addEventListener('touchmove', e => {
+    if (!swipeActive) return;
+    const dx = e.touches[0].clientX - swipeStartX;
+    const dy = e.touches[0].clientY - swipeStartY;
+    const dist = Math.hypot(dx, dy);
+
+    if (swipeAxis === null && dist > AXIS_DECIDE) {
+      swipeAxis = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+    }
+
+    if (swipeAxis !== 'h') return; // let vertical scroll pass through
+
+    e.preventDefault(); // block page-level scroll during horizontal swipe
+    swipeDelta = dx;
+    const base = -currentPage * 100;
+    carousel.style.transform = `translateX(calc(${base}% + ${dx}px))`;
+  }, { passive: false });
+
+  wrapper.addEventListener('touchend', () => {
+    if (!swipeActive) return;
+    swipeActive = false;
+    carousel.style.transition = 'transform 0.42s cubic-bezier(0.25,0.46,0.45,0.94)';
+    if      (swipeAxis === 'h' && swipeDelta < -SWIPE_THRESH) goToPage(currentPage + 1);
+    else if (swipeAxis === 'h' && swipeDelta >  SWIPE_THRESH) goToPage(currentPage - 1);
+    else    goToPage(currentPage); // snap back
+    swipeDelta = 0;
+    swipeAxis  = null;
+  });
+
+  // ── MOUSE drag ──
+  let mDown = false, mStartX = 0, mDelta = 0;
+  wrapper.addEventListener('mousedown', e => {
+    // Only drag from non-canvas targets
+    if (e.target.classList.contains('scratch-canvas')) return;
+    mDown   = true;
+    mStartX = e.clientX;
+    mDelta  = 0;
+    carousel.style.transition = 'none';
+  });
+  wrapper.addEventListener('mousemove', e => {
+    if (!mDown) return;
+    mDelta = e.clientX - mStartX;
+    const base = -currentPage * 100;
+    carousel.style.transform = `translateX(calc(${base}% + ${mDelta}px))`;
+  });
+  const endMouseSwipe = () => {
+    if (!mDown) return;
+    mDown = false;
+    carousel.style.transition = 'transform 0.42s cubic-bezier(0.25,0.46,0.45,0.94)';
+    if      (mDelta < -SWIPE_THRESH) goToPage(currentPage + 1);
+    else if (mDelta >  SWIPE_THRESH) goToPage(currentPage - 1);
+    else    goToPage(currentPage);
+    mDelta = 0;
+  };
+  wrapper.addEventListener('mouseup',    endMouseSwipe);
+  wrapper.addEventListener('mouseleave', endMouseSwipe);
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+function init() {
+  buildPages();
+  updateStats();
+  initCarousel();
+  // Wait for layout before sizing canvases
+  requestAnimationFrame(() => setTimeout(initAllScratch, 80));
+}
+
+init();
+</script>
+</body>
+</html>
